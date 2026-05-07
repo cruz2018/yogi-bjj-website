@@ -1,8 +1,15 @@
 {
+  "functions": {
+    "api/index.ts": {
+      "includeFiles": "server/**"
+    },
+    "api/webhook.ts": {
+      "includeFiles": "server/services/messageService.ts"
+    }
+  },
   "rewrites": [
-    { "source": "/webhook", "destination": "/api" },
-    { "source": "/webhook/(.*)", "destination": "/api" },
-    { "source": "/health", "destination": "/api" },
-    { "source": "/api/(.*)", "destination": "/api" }
+    { "source": "/webhook",    "destination": "/api/webhook" },
+    { "source": "/health",     "destination": "/api"         },
+    { "source": "/api/:path*", "destination": "/api"         }
   ]
 }
