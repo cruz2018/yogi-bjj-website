@@ -17,14 +17,38 @@ const inputClass =
   'w-full border border-gray-200 rounded px-4 py-3 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent transition'
 const labelClass = 'block text-sm font-medium text-gray-700 mb-1.5'
 
+type Status = 'idle' | 'loading' | 'success' | 'error'
+interface FormState { status: Status; error: string | null }
+const idleState: FormState = { status: 'idle', error: null }
+
 export default function Kontakt() {
   const [form, setForm] = useState<ContactForm>(initial)
-  const [submitted, setSubmitted] = useState(false)
+  const [state, setState] = useState<FormState>(idleState)
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
-    setSubmitted(true)
-    setForm(initial)
+    setState({ status: 'loading', error: null })
+    fetch('/api/questions', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        name: `${form.fornamn} ${form.efternamn}`.trim(),
+        email: form.epost,
+        question: form.meddelande,
+      }),
+    })
+      .then(res => res.json().then(json => ({ res, json })))
+      .then(({ res, json }: { res: Response; json: { success: boolean; error?: string } }) => {
+        if (res.ok && json.success) {
+          setState({ status: 'success', error: null })
+          setForm(initial)
+        } else {
+          setState({ status: 'error', error: json.error ?? 'Något gick fel.' })
+        }
+      })
+      .catch(() => {
+        setState({ status: 'error', error: 'Något gick fel. Försök igen eller kontakta oss via WhatsApp.' })
+      })
   }
 
   return (
@@ -94,8 +118,8 @@ export default function Kontakt() {
 
           {/* Contact form */}
           <div>
-            {submitted ? (
-              <div className="rounded-lg bg-gray-50 border border-gray-100 p-8 text-center h-full flex flex-col items-center justify-center">
+            {state.status === 'success' ? (
+              <div data-testid="kontakt-success" className="rounded-lg bg-gray-50 border border-gray-100 p-8 text-center h-full flex flex-col items-center justify-center">
                 <div className="w-10 h-10 bg-orange-100 rounded-full flex items-center justify-center mx-auto mb-4">
                   <svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true">
                     <path d="M4 10l4 4 8-8" stroke="#ea580c" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
@@ -105,75 +129,47 @@ export default function Kontakt() {
                 <p className="text-gray-600 text-sm">Vi återkommer så snart som möjligt.</p>
                 <button
                   type="button"
-                  onClick={() => setSubmitted(false)}
+                  onClick={() => setState(idleState)}
                   className="mt-5 text-sm text-orange-600 underline underline-offset-4 hover:text-orange-700"
                 >
                   Skicka nytt meddelande
                 </button>
               </div>
             ) : (
-              <form onSubmit={handleSubmit} noValidate className="space-y-5">
+              <form data-testid="kontakt-form" onSubmit={handleSubmit} noValidate className="space-y-5">
+                {state.error && (
+                  <div data-testid="kontakt-error" className="rounded border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700" role="alert">
+                    {state.error}
+                  </div>
+                )}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
                     <label htmlFor="kontaktFornamn" className={labelClass}>Förnamn</label>
-                    <input
-                      id="kontaktFornamn"
-                      type="text"
-                      required
-                      autoComplete="given-name"
-                      className={inputClass}
-                      placeholder="Ditt förnamn"
-                      value={form.fornamn}
-                      onChange={(e) => setForm({ ...form, fornamn: e.target.value })}
-                    />
+                    <input id="kontaktFornamn" data-testid="kontakt-fornamn" type="text" required autoComplete="given-name" className={inputClass} placeholder="Ditt förnamn" value={form.fornamn} onChange={(e) => setForm({ ...form, fornamn: e.target.value })} />
                   </div>
                   <div>
                     <label htmlFor="kontaktEfternamn" className={labelClass}>Efternamn</label>
-                    <input
-                      id="kontaktEfternamn"
-                      type="text"
-                      required
-                      autoComplete="family-name"
-                      className={inputClass}
-                      placeholder="Ditt efternamn"
-                      value={form.efternamn}
-                      onChange={(e) => setForm({ ...form, efternamn: e.target.value })}
-                    />
+                    <input id="kontaktEfternamn" data-testid="kontakt-efternamn" type="text" required autoComplete="family-name" className={inputClass} placeholder="Ditt efternamn" value={form.efternamn} onChange={(e) => setForm({ ...form, efternamn: e.target.value })} />
                   </div>
                 </div>
 
                 <div>
                   <label htmlFor="kontaktEpost" className={labelClass}>E-post</label>
-                  <input
-                    id="kontaktEpost"
-                    type="email"
-                    required
-                    autoComplete="email"
-                    className={inputClass}
-                    placeholder="din@epost.se"
-                    value={form.epost}
-                    onChange={(e) => setForm({ ...form, epost: e.target.value })}
-                  />
+                  <input id="kontaktEpost" data-testid="kontakt-epost" type="email" required autoComplete="email" className={inputClass} placeholder="din@epost.se" value={form.epost} onChange={(e) => setForm({ ...form, epost: e.target.value })} />
                 </div>
 
                 <div>
                   <label htmlFor="kontaktMeddelande" className={labelClass}>Meddelande</label>
-                  <textarea
-                    id="kontaktMeddelande"
-                    rows={5}
-                    required
-                    className={inputClass}
-                    placeholder="Skriv ditt meddelande här..."
-                    value={form.meddelande}
-                    onChange={(e) => setForm({ ...form, meddelande: e.target.value })}
-                  />
+                  <textarea id="kontaktMeddelande" data-testid="kontakt-meddelande" rows={5} required className={inputClass} placeholder="Skriv ditt meddelande här..." value={form.meddelande} onChange={(e) => setForm({ ...form, meddelande: e.target.value })} />
                 </div>
 
                 <button
                   type="submit"
-                  className="w-full sm:w-auto px-8 py-3.5 bg-orange-600 text-white font-semibold rounded hover:bg-orange-700 transition-colors text-sm"
+                  data-testid="kontakt-submit"
+                  disabled={state.status === 'loading'}
+                  className="w-full sm:w-auto px-8 py-3.5 bg-orange-600 text-white font-semibold rounded hover:bg-orange-700 disabled:opacity-60 disabled:cursor-not-allowed transition-colors text-sm"
                 >
-                  Skicka meddelande
+                  {state.status === 'loading' ? 'Skickar...' : 'Skicka meddelande'}
                 </button>
               </form>
             )}
