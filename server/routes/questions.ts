@@ -1,7 +1,7 @@
 import { Router } from 'express'
 import type { Request, Response } from 'express'
-import { createQuestion } from '../services/leadService'
-import { fail } from '../types/lead'
+import { createQuestion } from '../services/leadService.js'
+import { fail } from '../types/lead.js'
 
 const router = Router()
 

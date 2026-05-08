@@ -1,7 +1,7 @@
 import { Router } from 'express'
 import type { Request, Response } from 'express'
-import { storeMessage } from '../services/messageService'
-import type { StoredMessage } from '../services/messageService'
+import { storeMessage } from '../services/messageService.js'
+import type { StoredMessage } from '../services/messageService.js'
 
 const router = Router()
 

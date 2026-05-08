@@ -1,7 +1,7 @@
 import { Router } from 'express'
 import type { Request, Response } from 'express'
-import { createLead } from '../services/leadService'
-import { fail } from '../types/lead'
+import { createLead } from '../services/leadService.js'
+import { fail } from '../types/lead.js'
 
 const router = Router()
 
@@ -26,7 +26,7 @@ router.post('/', async (req: Request, res: Response) => {
 // GET /api/leads — for internal inspection / future admin panel
 router.get('/', async (_req: Request, res: Response) => {
   try {
-    const { getAllLeads } = await import('../services/crmService')
+    const { getAllLeads } = await import('../services/crmService.js')
     const leads = await getAllLeads()
     res.json({ success: true, data: leads, error: null })
   } catch (err) {

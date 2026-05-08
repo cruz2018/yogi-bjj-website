@@ -1,8 +1,8 @@
 import express from 'express'
 import cors from 'cors'
-import leadsRouter from './routes/leads'
-import questionsRouter from './routes/questions'
-import whatsappRouter from './routes/whatsapp'
+import leadsRouter from './routes/leads.js'
+import questionsRouter from './routes/questions.js'
+import whatsappRouter from './routes/whatsapp.js'
 
 const app = express()
 

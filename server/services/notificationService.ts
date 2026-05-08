@@ -1,4 +1,4 @@
-import type { Lead, Question } from '../types/lead'
+import type { Lead, Question } from '../types/lead.js'
 
 // ─── Notification service ──────────────────────────────────────────────────
 // Current behaviour: log to console.

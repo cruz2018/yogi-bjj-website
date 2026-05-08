@@ -69,7 +69,7 @@ export default async function handler(req: any, res: any): Promise<void> {
       console.log('[webhook] Incoming payload:', JSON.stringify(body))
 
       // Lazy import so a messageService crash never affects GET verification.
-      const { storeMessage } = await import('../server/services/messageService')
+      const { storeMessage } = await import('../server/services/messageService.js')
 
       try {
         const changes = body.entry?.[0]?.changes ?? []

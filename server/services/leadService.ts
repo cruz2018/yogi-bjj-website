@@ -1,7 +1,7 @@
 import crypto from 'crypto'
-import { fail, ok, type Lead, type LeadType, type Question, type ApiResponse } from '../types/lead'
-import { saveLead, saveQuestion } from './crmService'
-import { notifyNewLead, notifyNewQuestion } from './notificationService'
+import { fail, ok, type Lead, type LeadType, type Question, type ApiResponse } from '../types/lead.js'
+import { saveLead, saveQuestion } from './crmService.js'
+import { notifyNewLead, notifyNewQuestion } from './notificationService.js'
 
 // ─── Validation helpers ─────────────────────────────────────────────────────
 function isEmail(v: string): boolean {

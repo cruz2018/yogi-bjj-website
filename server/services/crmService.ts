@@ -1,7 +1,7 @@
 import fs from 'fs/promises'
 import path from 'path'
 import { createClient } from '@supabase/supabase-js'
-import type { Lead, Question } from '../types/lead'
+import type { Lead, Question } from '../types/lead.js'
 
 // ─── Supabase client (lazy — only created when env vars are present) ─────────
 
