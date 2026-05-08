@@ -127,9 +127,9 @@ function logSupabaseError(label: string, error: unknown): void {
   }
 }
 
-// Does a plain fetch to the Supabase REST root before every insert so we can
-// distinguish "Supabase is unreachable" from "insert payload is wrong".
-async function probeSupabase(): Promise<void> {
+// Connectivity probe — call manually during debugging, not on every insert.
+// Usage: await probeSupabase() before saveLead() when diagnosing ENOTFOUND errors.
+export async function probeSupabase(): Promise<void> {
   const url = process.env.SUPABASE_URL
   if (!url) return
   try {
@@ -158,7 +158,6 @@ export async function saveLead(lead: Lead): Promise<Lead> {
   const supabase = await getSupabase()
 
   if (supabase) {
-    await probeSupabase()   // logs connectivity result before touching the SDK
     console.log('[crm] Inserting lead into Supabase — id:', lead.id, 'type:', lead.type)
     const { error } = await supabase.from('leads').insert(toRow(lead) as never)
     if (error) {
