@@ -34,19 +34,31 @@ export default async function handler(req: any, res: any): Promise<void> {
     if (req.method === 'GET') {
       const { query } = parseUrl(req.url ?? '', true)
       const mode      = query['hub.mode']
-      const token     = query['hub.verify_token']
       const challenge = query['hub.challenge']
 
-      if (mode === 'subscribe' && token === process.env.VERIFY_TOKEN) {
+      const receivedToken = String(query['hub.verify_token'] ?? '').trim()
+      const expectedToken = String(process.env.VERIFY_TOKEN ?? '').trim()
+
+      console.log('[webhook] GET verification attempt')
+      console.log('[webhook]   mode received:', mode)
+      console.log('[webhook]   challenge exists:', challenge !== undefined && challenge !== '')
+      console.log('[webhook]   received token length:', receivedToken.length)
+      console.log('[webhook]   env VERIFY_TOKEN exists:', expectedToken.length > 0)
+      console.log('[webhook]   env VERIFY_TOKEN length:', expectedToken.length)
+      console.log('[webhook]   tokens match:', receivedToken === expectedToken)
+
+      if (mode === 'subscribe' && receivedToken === expectedToken && expectedToken.length > 0) {
         console.log('[webhook] Verification succeeded')
         res.writeHead(200, { 'Content-Type': 'text/plain' })
         res.end(String(challenge ?? ''))
         return
       }
 
-      console.warn('[webhook] Verification failed — mode:', mode)
+      console.warn('[webhook] Verification failed — mode:', mode,
+        '| token match:', receivedToken === expectedToken,
+        '| env set:', expectedToken.length > 0)
       res.writeHead(403)
-      res.end('Forbidden')
+      res.end('Forbidden: verify token mismatch or invalid mode')
       return
     }
 

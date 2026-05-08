@@ -8,10 +8,14 @@ const router = Router()
 // POST /api/leads
 // Accepts an Intresseanmälan submission from the website form.
 router.post('/', async (req: Request, res: Response) => {
+  console.log('[leads] POST /api/leads received')
+  console.log('[leads] body keys:', Object.keys(req.body ?? {}).join(', '))
+
   try {
-    // req.body is `any` — validation happens inside createLead
+    console.log('[leads] calling createLead...')
     const result = await createLead(req.body)
     const status = result.success ? 201 : 400
+    console.log(`[leads] responding ${status} — success: ${result.success}`)
     res.status(status).json(result)
   } catch (err) {
     console.error('[leads] Unexpected error:', err)
