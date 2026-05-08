@@ -1,48 +1,45 @@
 import fs from 'fs/promises'
 import path from 'path'
+import { createClient } from '@supabase/supabase-js'
 import type { Lead, Question } from '../types/lead'
 
 // ─── Supabase client (lazy — only created when env vars are present) ─────────
 
-// Cached after first call so we pay the dynamic import cost only once.
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-let _supabasePromise: Promise<any> | null = null
+let _supabaseClient: any | null = null
+let _supabaseInitialized = false
 
-async function getSupabase() {
-  if (_supabasePromise) return _supabasePromise
+function getSupabase() {
+  if (_supabaseInitialized) return _supabaseClient
 
-  _supabasePromise = (async () => {
-    const url = process.env.SUPABASE_URL
-    const key = process.env.SUPABASE_SERVICE_ROLE_KEY
+  _supabaseInitialized = true
+  const url = process.env.SUPABASE_URL
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY
 
-    if (!url && !key) {
-      console.warn('[crm] SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY are not set — using JSON fallback')
-      return null
-    }
-    if (!url) {
-      console.error('[crm] SUPABASE_URL is missing — check your .env or Vercel env vars')
-      return null
-    }
-    if (!key) {
-      console.error('[crm] SUPABASE_SERVICE_ROLE_KEY is missing — check your .env or Vercel env vars')
-      return null
-    }
-    if (!url.startsWith('https://') || !url.includes('.supabase.co')) {
-      console.error('[crm] SUPABASE_URL looks wrong — expected format: https://xxxx.supabase.co')
-      return null
-    }
-    if (!key.startsWith('eyJ')) {
-      console.error('[crm] SUPABASE_SERVICE_ROLE_KEY looks wrong — expected a JWT starting with eyJ')
-      return null
-    }
+  if (!url && !key) {
+    console.warn('[crm] SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY are not set — using JSON fallback')
+    return null
+  }
+  if (!url) {
+    console.error('[crm] SUPABASE_URL is missing — check your .env or Vercel env vars')
+    return null
+  }
+  if (!key) {
+    console.error('[crm] SUPABASE_SERVICE_ROLE_KEY is missing — check your .env or Vercel env vars')
+    return null
+  }
+  if (!url.startsWith('https://') || !url.includes('.supabase.co')) {
+    console.error('[crm] SUPABASE_URL looks wrong — expected format: https://xxxx.supabase.co')
+    return null
+  }
+  if (!key.startsWith('eyJ')) {
+    console.error('[crm] SUPABASE_SERVICE_ROLE_KEY looks wrong — expected a JWT starting with eyJ')
+    return null
+  }
 
-    const { createClient } = await import('@supabase/supabase-js')
-    const client = createClient(url, key)
-    console.log('[crm] Supabase client initialized —', url)
-    return client
-  })()
-
-  return _supabasePromise
+  _supabaseClient = createClient(url, key)
+  console.log('[crm] Supabase client initialized —', url)
+  return _supabaseClient
 }
 
 // ─── Supabase helpers ─────────────────────────────────────────────────────────
@@ -155,7 +152,7 @@ export async function probeSupabase(): Promise<void> {
 // ─── Public API ───────────────────────────────────────────────────────────────
 
 export async function saveLead(lead: Lead): Promise<Lead> {
-  const supabase = await getSupabase()
+  const supabase = getSupabase()
 
   if (supabase) {
     console.log('[crm] Inserting lead into Supabase — id:', lead.id, 'type:', lead.type)
@@ -176,7 +173,7 @@ export async function saveLead(lead: Lead): Promise<Lead> {
 }
 
 export async function getAllLeads(): Promise<Lead[]> {
-  const supabase = await getSupabase()
+  const supabase = getSupabase()
 
   if (supabase) {
     const { data, error } = await supabase
@@ -193,7 +190,7 @@ export async function getAllLeads(): Promise<Lead[]> {
 // Questions are stored in the same leads table with source='website-question'.
 // The Question shape is flattened: name → first_name, question → message.
 export async function saveQuestion(question: Question): Promise<Question> {
-  const supabase = await getSupabase()
+  const supabase = getSupabase()
 
   if (supabase) {
     const row = {
